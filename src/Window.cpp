@@ -37,6 +37,14 @@ void Window::handleEvents()
         {
             renderWindow.close();
         }
+        else if (const auto* resized = event->getIf<sf::Event::Resized>())
+        {
+            const sf::FloatRect visibleArea(
+                {0.0f, 0.0f},
+                {static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)});
+
+            renderWindow.setView(sf::View(visibleArea));
+        }
     }
 }
 

@@ -42,7 +42,7 @@ From the project root:
 
 ```bash
 mkdir -p build
-g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe
+g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe
 ```
 
 In VS Code, press `Ctrl+Shift+B` and choose `Build SeamCraft`.

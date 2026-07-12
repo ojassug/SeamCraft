@@ -2,7 +2,7 @@
 
 SeamCraft is an interactive desktop application for learning content-aware image resizing with Seam Carving and Dijkstra's Algorithm.
 
-The project is currently at Milestone 1 and contains a clean C++/SFML application foundation.
+The project is currently at Milestone 2A and contains the first image infrastructure needed for future seam carving work.
 
 ## Features
 
@@ -13,10 +13,15 @@ Current:
 - Runs at 60 FPS
 - Handles window close events cleanly
 - Uses separate `Application` and `Window` classes
+- Attempts to load `assets/images/sample.png` at startup
+- Displays a loaded image centered in the window
+- Preserves image aspect ratio
+- Scales large images down without upscaling small images
+- Stores both the original image and the current working image
 
 Planned:
 
-- Image loading and rendering
+- User-selected image loading
 - Energy map generation
 - Pixel graph construction
 - Dijkstra shortest path seam search
@@ -49,7 +54,13 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64
 
 ## Current Milestone
 
-Milestone 1: Project foundation.
+Milestone 2A: Image infrastructure.
+
+## Supported Image Formats
+
+- PNG
+- JPG
+- JPEG
 
 ## Folder Structure
 
@@ -61,9 +72,11 @@ SeamCraft/
 |-- docs/
 |-- include/
 |   |-- Application.hpp
+|   |-- ImageManager.hpp
 |   `-- Window.hpp
 |-- src/
 |   |-- Application.cpp
+|   |-- ImageManager.cpp
 |   |-- main.cpp
 |   `-- Window.cpp
 |-- .gitignore
@@ -80,7 +93,7 @@ From the project root:
 
 ```bash
 mkdir -p build
-g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe
+g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe
 ```
 
 In VS Code, press `Ctrl+Shift+B` to build and `F5` to debug.
@@ -93,7 +106,7 @@ See `PROJECT_PLAN.md` for the full milestone roadmap.
 
 ## Future Work
 
-- Image loading
+- User-selected image loading
 - Energy calculation
 - Graph construction
 - Dijkstra seam search

@@ -6,7 +6,11 @@
 - [x] Basic application architecture
 
 ## Milestone 2
-- [ ] Image loading
+- [x] Milestone 2A: Image infrastructure
+- [x] Load PNG, JPG, and JPEG files with SFML
+- [x] Store original and current working image
+- [x] Display loaded image with aspect-ratio fitting
+- [ ] User-selected image loading
 - [ ] Display uploaded image
 
 ## Milestone 3

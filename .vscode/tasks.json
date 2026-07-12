@@ -10,7 +10,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-Command",
-                "New-Item -ItemType Directory -Force build | Out-Null; C:/msys64/ucrt64/bin/g++.exe -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe"
+                "New-Item -ItemType Directory -Force build | Out-Null; C:/msys64/ucrt64/bin/g++.exe -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe"
             ],
             "group": {
                 "kind": "build",
