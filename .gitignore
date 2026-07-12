@@ -1,0 +1,46 @@
+# Compiled object files
+*.o
+*.obj
+*.lo
+
+# Executables
+*.exe
+*.out
+*.app
+*.ilk
+*.pdb
+
+# Static and dynamic libraries
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Build folders
+build/
+bin/
+obj/
+Debug/
+Release/
+.vs/
+
+# VS Code
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.swp
