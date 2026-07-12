@@ -1,2 +1,22 @@
 # SeamCraft
-A visualization tool for seam carving that models an image as a graph and uses Dijkstra's algorithm to find and animate the minimum-energy seam during content-aware image resizing.
+
+An interactive desktop application built in C++ that demonstrates content-aware image resizing using Seam Carving and Dijkstra's shortest path algorithm.
+
+## Features (Planned)
+
+- Upload an image
+- Compute pixel energy
+- Find the minimum-energy seam using Dijkstra's algorithm
+- Highlight each seam before removal
+- Animate the resizing process
+- Save the resized image
+
+## Tech Stack
+
+- C++17
+- SFML
+- Git & GitHub
+
+## Status
+
+🚧 Under Development
