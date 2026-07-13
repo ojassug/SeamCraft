@@ -37,8 +37,12 @@
 - [x] Print temporary graph debug statistics and sanity checks
 
 ## Milestone 5
-- [ ] Dijkstra shortest path
-- [ ] Seam reconstruction
+- [x] Milestone 5A: Dijkstra shortest path
+- [x] Compute minimum-cost vertical seam using Dijkstra's algorithm
+- [x] Reconstruct shortest path from predecessor chain
+- [x] Validate seam structure (length, start row, end row, column adjacency)
+- [x] Print temporary seam debug statistics
+- [ ] Seam visualization and removal
 
 ## Milestone 6
 - [ ] Seam highlighting

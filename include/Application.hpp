@@ -1,6 +1,7 @@
 #ifndef SEAMCRAFT_APPLICATION_HPP
 #define SEAMCRAFT_APPLICATION_HPP
 
+#include "DijkstraSolver.hpp"
 #include "EnergyCalculator.hpp"
 #include "EnergyRenderer.hpp"
 #include "ImageManager.hpp"
@@ -24,8 +25,10 @@ private:
     void updateEnergyVisualization();
     void rebuildPixelGraph();
     void toggleDisplayMode();
+    void computeShortestSeam();
     void printEnergyDebugInfo() const;
     void printGraphDebugInfo() const;
+    void printSeamDebugInfo() const;
     void setLoadedStatus();
     void setStatus(const std::string& message);
     void updateWindowTitle();
@@ -35,6 +38,7 @@ private:
     EnergyCalculator energyCalculator;
     EnergyRenderer energyRenderer;
     PixelGraph pixelGraph;
+    DijkstraSolver dijkstraSolver;
     std::string statusMessage;
     bool showingEnergyMap = false;
 };

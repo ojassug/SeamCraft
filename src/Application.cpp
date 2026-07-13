@@ -160,6 +160,7 @@ void Application::rebuildPixelGraph()
 {
     pixelGraph.build(energyCalculator);
     printGraphDebugInfo();
+    computeShortestSeam();
 }
 
 void Application::toggleDisplayMode()
@@ -236,6 +237,39 @@ void Application::printGraphDebugInfo() const
               << std::defaultfloat;
     std::cout << "Vertical connectivity sanity check: "
               << (pixelGraph.validateVerticalConnectivity() ? "passed" : "failed") << '\n';
+}
+
+void Application::computeShortestSeam()
+{
+    dijkstraSolver.solve(pixelGraph);
+    printSeamDebugInfo();
+}
+
+void Application::printSeamDebugInfo() const
+{
+    if (!dijkstraSolver.hasSeam())
+    {
+        std::cout << "Shortest seam: not computed (empty graph).\n";
+        return;
+    }
+
+    const std::vector<unsigned int>& seamNodeIds = dijkstraSolver.getSeam();
+    const unsigned int topNodeId = seamNodeIds.front();
+    const unsigned int bottomNodeId = seamNodeIds.back();
+    const auto [topX, topY] = pixelGraph.coordinatesFromNodeId(topNodeId);
+    const auto [bottomX, bottomY] = pixelGraph.coordinatesFromNodeId(bottomNodeId);
+
+    std::cout << "Shortest seam computed.\n";
+    std::cout << "Seam length: " << seamNodeIds.size() << '\n';
+    std::cout << std::fixed << std::setprecision(2)
+              << "Total seam energy: " << dijkstraSolver.getTotalEnergy() << '\n'
+              << std::defaultfloat;
+    std::cout << "Top node: id=" << topNodeId
+              << " (" << topX << ", " << topY << ")\n";
+    std::cout << "Bottom node: id=" << bottomNodeId
+              << " (" << bottomX << ", " << bottomY << ")\n";
+    std::cout << "Seam validation: "
+              << (dijkstraSolver.validateSeam(pixelGraph) ? "passed" : "failed") << '\n';
 }
 
 void Application::setLoadedStatus()
