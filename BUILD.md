@@ -36,13 +36,19 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb
 pacman -S --needed mingw-w64-ucrt-x86_64-sfml
 ```
 
+## File Dialog Dependency
+
+SeamCraft vendors `tinyfiledialogs` in `third_party/tinyfiledialogs`.
+It is a small cross-platform C library used only for the Open Image file picker.
+
 ## Build
 
 From the project root:
 
 ```bash
 mkdir -p build
-g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp -Iinclude -lsfml-graphics -lsfml-window -lsfml-system -o build/SeamCraft.exe
+gcc -std=c99 -g -c third_party/tinyfiledialogs/tinyfiledialogs.c -o build/tinyfiledialogs.o
+g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
 ```
 
 In VS Code, press `Ctrl+Shift+B` and choose `Build SeamCraft`.

@@ -2,6 +2,7 @@
 #define SEAMCRAFT_WINDOW_HPP
 
 #include <SFML/Graphics.hpp>
+#include <functional>
 #include <string>
 
 // Wraps SFML's RenderWindow so window setup, events, and drawing stay in one place.
@@ -11,7 +12,7 @@ public:
     Window(unsigned int width, unsigned int height, const std::string& title);
 
     bool isOpen() const;
-    void handleEvents();
+    void handleEvents(const std::function<void(const sf::Event&)>& eventHandler = nullptr);
     void close();
     void beginFrame();
     void endFrame();

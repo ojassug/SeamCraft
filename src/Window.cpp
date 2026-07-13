@@ -28,11 +28,16 @@ void Window::close()
     renderWindow.close();
 }
 
-void Window::handleEvents()
+void Window::handleEvents(const std::function<void(const sf::Event&)>& eventHandler)
 {
     // Poll every pending event so the window remains responsive.
     while (const std::optional event = renderWindow.pollEvent())
     {
+        if (eventHandler)
+        {
+            eventHandler(*event);
+        }
+
         if (event->is<sf::Event::Closed>())
         {
             renderWindow.close();

@@ -10,8 +10,11 @@
 - [x] Load PNG, JPG, and JPEG files with SFML
 - [x] Store original and current working image
 - [x] Display loaded image with aspect-ratio fitting
-- [ ] User-selected image loading
-- [ ] Display uploaded image
+- [x] Milestone 2B: User-controlled image loading
+- [x] Open PNG, JPG, and JPEG images from disk
+- [x] Display selected image
+- [x] Reset current image back to stored original image
+- [x] Show simple image load and error status information
 
 ## Milestone 3
 - [ ] Energy map generation

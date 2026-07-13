@@ -14,9 +14,16 @@ public:
 
 private:
     void loadStartupImage();
+    void handleEvent(const sf::Event& event);
+    void openImage();
+    void resetImage();
+    void setLoadedStatus();
+    void setStatus(const std::string& message);
+    void updateWindowTitle();
 
     Window window;
     ImageManager imageManager;
+    std::string statusMessage;
 };
 
 #endif
