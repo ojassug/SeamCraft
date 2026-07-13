@@ -14,7 +14,7 @@ constexpr unsigned int WindowWidth = 1200;
 constexpr unsigned int WindowHeight = 800;
 constexpr const char WindowTitle[] = "SeamCraft";
 constexpr const char StartupImagePath[] = "assets/images/sample.png";
-constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy";
+constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy | S: Toggle Seam";
 }
 
 Application::Application()
@@ -32,13 +32,20 @@ void Application::run()
         window.handleEvents([this](const sf::Event& event) {
             handleEvent(event);
         });
+
+        const sf::Vector2u windowSize = window.getRenderWindow().getSize();
         if (showingEnergyMap)
         {
-            energyRenderer.fitToWindow(window.getRenderWindow().getSize());
+            energyRenderer.fitToWindow(windowSize);
         }
         else
         {
-            imageManager.fitToWindow(window.getRenderWindow().getSize());
+            imageManager.fitToWindow(windowSize);
+        }
+
+        if (showingSeam)
+        {
+            seamRenderer.fitToWindow(windowSize);
         }
 
         window.beginFrame();
@@ -49,6 +56,11 @@ void Application::run()
         else
         {
             imageManager.draw(window.getRenderWindow());
+        }
+
+        if (showingSeam)
+        {
+            seamRenderer.draw(window.getRenderWindow());
         }
         window.endFrame();
     }
@@ -89,6 +101,10 @@ void Application::handleEvent(const sf::Event& event)
     else if (keyPressed->code == sf::Keyboard::Key::E)
     {
         toggleDisplayMode();
+    }
+    else if (keyPressed->code == sf::Keyboard::Key::S)
+    {
+        toggleSeamVisibility();
     }
 }
 
@@ -181,6 +197,24 @@ void Application::toggleDisplayMode()
     updateWindowTitle();
 }
 
+void Application::toggleSeamVisibility()
+{
+    if (!imageManager.hasImage())
+    {
+        setStatus("No image is loaded.");
+        return;
+    }
+
+    if (!seamRenderer.hasOverlay())
+    {
+        setStatus("Seam visualization is not available.");
+        return;
+    }
+
+    showingSeam = !showingSeam;
+    updateWindowTitle();
+}
+
 void Application::printEnergyDebugInfo() const
 {
     const EnergyCalculator::EnergyMap& energyMap = energyCalculator.getEnergyMap();
@@ -243,6 +277,7 @@ void Application::computeShortestSeam()
 {
     dijkstraSolver.solve(pixelGraph);
     printSeamDebugInfo();
+    seamRenderer.updateFromSeam(dijkstraSolver.getSeam(), pixelGraph);
 }
 
 void Application::printSeamDebugInfo() const
@@ -293,6 +328,11 @@ void Application::updateWindowTitle()
 {
     std::string title = WindowTitle;
     title += showingEnergyMap ? " | Energy Map" : " | Original Image";
+
+    if (showingSeam)
+    {
+        title += " + Seam";
+    }
 
     if (!statusMessage.empty())
     {

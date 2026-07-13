@@ -2,7 +2,7 @@
 
 SeamCraft is an interactive desktop application for learning content-aware image resizing with Seam Carving and Dijkstra's Algorithm.
 
-The project is currently at Milestone 5A and can compute the minimum-energy vertical seam using Dijkstra's algorithm.
+The project is currently at Milestone 5B and can visualize the minimum-energy vertical seam computed by Dijkstra's algorithm.
 
 ## Features
 
@@ -31,10 +31,13 @@ Current:
 - Computes the minimum-energy vertical seam using Dijkstra's algorithm
 - Validates seam structure automatically
 - Prints temporary seam, graph, and energy debug statistics to the console
+- Converts Dijkstra node IDs back to pixel coordinates
+- Draws the computed seam as a bright red overlay on top of the original image
+- Toggles seam visualization with the `S` key
 
 Planned:
 
-- Seam highlighting and removal
+- Seam removal
 
 ## Tech Stack
 
@@ -63,7 +66,7 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64
 
 ## Current Milestone
 
-Milestone 5A: Dijkstra shortest-path seam computation.
+Milestone 5B: Seam visualization.
 ## Energy Calculation
 
 Seam carving removes low-importance paths through an image. Before SeamCraft can find those paths, it needs an energy map. The energy map stores one `float` value per pixel, where larger values usually mean stronger visual detail such as edges or texture.
@@ -144,11 +147,22 @@ Automatic validation checks:
 - Last node is in the bottom row
 - Consecutive nodes differ by at most one column
 
+## Seam Visualization
+
+`SeamRenderer` visualizes the seam computed by `DijkstraSolver`. It draws a bright red overlay on top of the displayed image.
+
+- It takes the shortest-path node IDs and the `PixelGraph`.
+- It converts each node ID back into an `(x, y)` pixel coordinate using `coordinatesFromNodeId`.
+- It creates a transparent image the same size as the original image and sets the seam pixels to red.
+- It uses the same scaling and positioning logic (`fitToWindow`) as the other renderers, ensuring the overlay perfectly aligns with the displayed image.
+- It does not modify the original image data and does not recompute the seam.
+
 ## Controls
 
 - Press `O` to open an image from disk
 - Press `R` to reset the current image back to the stored original image
 - Press `E` to toggle between the original image and the energy map
+- Press `S` to toggle the seam overlay on the original image
 
 ## Supported Image Formats
 
@@ -171,6 +185,7 @@ SeamCraft/
 |   |-- EnergyRenderer.hpp
 |   |-- ImageManager.hpp
 |   |-- PixelGraph.hpp
+|   |-- SeamRenderer.hpp
 |   `-- Window.hpp
 |-- src/
 |   |-- Application.cpp
@@ -180,6 +195,7 @@ SeamCraft/
 |   |-- ImageManager.cpp
 |   |-- main.cpp
 |   |-- PixelGraph.cpp
+|   |-- SeamRenderer.cpp
 |   `-- Window.cpp
 |-- third_party/
 |   `-- tinyfiledialogs/
@@ -213,6 +229,6 @@ See `PROJECT_PLAN.md` for the full milestone roadmap.
 
 ## Future Work
 
-- Seam highlighting and removal
+- Seam removal
 - Seam carving animation
 - Saving resized images

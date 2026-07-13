@@ -6,6 +6,7 @@
 #include "EnergyRenderer.hpp"
 #include "ImageManager.hpp"
 #include "PixelGraph.hpp"
+#include "SeamRenderer.hpp"
 #include "Window.hpp"
 
 // Owns the high-level application lifecycle and main loop.
@@ -25,6 +26,7 @@ private:
     void updateEnergyVisualization();
     void rebuildPixelGraph();
     void toggleDisplayMode();
+    void toggleSeamVisibility();
     void computeShortestSeam();
     void printEnergyDebugInfo() const;
     void printGraphDebugInfo() const;
@@ -39,8 +41,10 @@ private:
     EnergyRenderer energyRenderer;
     PixelGraph pixelGraph;
     DijkstraSolver dijkstraSolver;
+    SeamRenderer seamRenderer;
     std::string statusMessage;
     bool showingEnergyMap = false;
+    bool showingSeam = false;
 };
 
 #endif

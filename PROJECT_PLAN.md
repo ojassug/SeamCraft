@@ -42,7 +42,11 @@
 - [x] Reconstruct shortest path from predecessor chain
 - [x] Validate seam structure (length, start row, end row, column adjacency)
 - [x] Print temporary seam debug statistics
-- [ ] Seam visualization and removal
+- [x] Milestone 5B: Seam visualization
+- [x] Create SeamRenderer for seam overlay
+- [x] Convert node IDs to pixel coordinates
+- [x] Add 'S' key to toggle seam visibility
+- [ ] Seam removal
 
 ## Milestone 6
 - [ ] Seam highlighting
