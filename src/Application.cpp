@@ -2,7 +2,10 @@
 
 #include "tinyfiledialogs.h"
 
+#include <algorithm>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <sstream>
 
 namespace
@@ -42,6 +45,7 @@ void Application::loadStartupImage()
     if (imageManager.loadImage(StartupImagePath))
     {
         std::cout << "Loaded startup image: " << imageManager.getFilename() << '\n';
+        calculateEnergyMap();
         setLoadedStatus();
     }
     else
@@ -89,6 +93,7 @@ void Application::openImage()
 
     if (imageManager.loadImage(selectedPath))
     {
+        calculateEnergyMap();
         setLoadedStatus();
     }
     else
@@ -101,12 +106,58 @@ void Application::resetImage()
 {
     if (imageManager.resetImage())
     {
+        calculateEnergyMap();
         setStatus("Reset image: " + imageManager.getFilename());
     }
     else
     {
         setStatus("Reset failed. " + imageManager.getLastError());
     }
+}
+
+void Application::calculateEnergyMap()
+{
+    energyCalculator.setImage(imageManager.getCurrentImage());
+    energyCalculator.calculate();
+    printEnergyDebugInfo();
+}
+
+void Application::printEnergyDebugInfo() const
+{
+    const EnergyCalculator::EnergyMap& energyMap = energyCalculator.getEnergyMap();
+
+    std::cout << "Energy calculation complete.\n";
+    std::cout << "Image size: " << imageManager.getWidth() << " x " << imageManager.getHeight() << '\n';
+    std::cout << "Energy map size: " << energyCalculator.getWidth() << " x " << energyCalculator.getHeight() << '\n';
+
+    if (energyMap.empty() || energyMap.front().empty())
+    {
+        std::cout << "Energy statistics are unavailable for an empty image.\n";
+        return;
+    }
+
+    float minimumEnergy = std::numeric_limits<float>::max();
+    float maximumEnergy = std::numeric_limits<float>::lowest();
+    double totalEnergy = 0.0;
+    unsigned int energyCount = 0;
+
+    for (const std::vector<float>& row : energyMap)
+    {
+        for (float energy : row)
+        {
+            minimumEnergy = std::min(minimumEnergy, energy);
+            maximumEnergy = std::max(maximumEnergy, energy);
+            totalEnergy += static_cast<double>(energy);
+            ++energyCount;
+        }
+    }
+
+    const double averageEnergy = totalEnergy / static_cast<double>(energyCount);
+    std::cout << std::fixed << std::setprecision(2)
+              << "Minimum energy: " << minimumEnergy << '\n'
+              << "Maximum energy: " << maximumEnergy << '\n'
+              << "Average energy: " << averageEnergy << '\n'
+              << std::defaultfloat;
 }
 
 void Application::setLoadedStatus()

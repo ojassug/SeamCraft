@@ -1,6 +1,7 @@
 #ifndef SEAMCRAFT_APPLICATION_HPP
 #define SEAMCRAFT_APPLICATION_HPP
 
+#include "EnergyCalculator.hpp"
 #include "ImageManager.hpp"
 #include "Window.hpp"
 
@@ -17,12 +18,15 @@ private:
     void handleEvent(const sf::Event& event);
     void openImage();
     void resetImage();
+    void calculateEnergyMap();
+    void printEnergyDebugInfo() const;
     void setLoadedStatus();
     void setStatus(const std::string& message);
     void updateWindowTitle();
 
     Window window;
     ImageManager imageManager;
+    EnergyCalculator energyCalculator;
     std::string statusMessage;
 };
 

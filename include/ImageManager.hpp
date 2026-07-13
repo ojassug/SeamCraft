@@ -17,6 +17,7 @@ public:
     void draw(sf::RenderTarget& renderTarget) const;
 
     const std::string& getFilename() const;
+    const sf::Image& getCurrentImage() const;
     unsigned int getWidth() const;
     unsigned int getHeight() const;
     float getScaleFactor() const;

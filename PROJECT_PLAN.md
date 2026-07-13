@@ -17,7 +17,11 @@
 - [x] Show simple image load and error status information
 
 ## Milestone 3
-- [ ] Energy map generation
+- [x] Milestone 3A: Energy calculation
+- [x] Compute floating-point energy values for every pixel
+- [x] Use grayscale luminance and Sobel gradients
+- [x] Store energy map as `std::vector<std::vector<float>>`
+- [x] Print temporary energy debug statistics
 - [ ] Energy visualization
 
 ## Milestone 4

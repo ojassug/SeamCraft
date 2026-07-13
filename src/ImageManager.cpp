@@ -119,6 +119,11 @@ const std::string& ImageManager::getFilename() const
     return filename;
 }
 
+const sf::Image& ImageManager::getCurrentImage() const
+{
+    return currentImage;
+}
+
 unsigned int ImageManager::getWidth() const
 {
     return currentImage.getSize().x;
