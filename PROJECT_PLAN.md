@@ -22,7 +22,11 @@
 - [x] Use grayscale luminance and Sobel gradients
 - [x] Store energy map as `std::vector<std::vector<float>>`
 - [x] Print temporary energy debug statistics
-- [ ] Energy visualization
+- [x] Milestone 3B: Energy visualization
+- [x] Convert energy map to grayscale image
+- [x] Normalize energy values from black to white
+- [x] Toggle original image and energy map with the `E` key
+- [x] Fit and center energy visualization in the window
 
 ## Milestone 4
 - [ ] Graph construction

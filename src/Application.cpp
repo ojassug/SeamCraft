@@ -14,7 +14,7 @@ constexpr unsigned int WindowWidth = 1200;
 constexpr unsigned int WindowHeight = 800;
 constexpr const char WindowTitle[] = "SeamCraft";
 constexpr const char StartupImagePath[] = "assets/images/sample.png";
-constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset";
+constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy";
 }
 
 Application::Application()
@@ -32,10 +32,24 @@ void Application::run()
         window.handleEvents([this](const sf::Event& event) {
             handleEvent(event);
         });
-        imageManager.fitToWindow(window.getRenderWindow().getSize());
+        if (showingEnergyMap)
+        {
+            energyRenderer.fitToWindow(window.getRenderWindow().getSize());
+        }
+        else
+        {
+            imageManager.fitToWindow(window.getRenderWindow().getSize());
+        }
 
         window.beginFrame();
-        imageManager.draw(window.getRenderWindow());
+        if (showingEnergyMap)
+        {
+            energyRenderer.draw(window.getRenderWindow());
+        }
+        else
+        {
+            imageManager.draw(window.getRenderWindow());
+        }
         window.endFrame();
     }
 }
@@ -71,6 +85,10 @@ void Application::handleEvent(const sf::Event& event)
     else if (keyPressed->code == sf::Keyboard::Key::R)
     {
         resetImage();
+    }
+    else if (keyPressed->code == sf::Keyboard::Key::E)
+    {
+        toggleDisplayMode();
     }
 }
 
@@ -119,7 +137,40 @@ void Application::calculateEnergyMap()
 {
     energyCalculator.setImage(imageManager.getCurrentImage());
     energyCalculator.calculate();
+    updateEnergyVisualization();
     printEnergyDebugInfo();
+}
+
+void Application::updateEnergyVisualization()
+{
+    if (energyRenderer.updateFromEnergyMap(energyCalculator.getEnergyMap()))
+    {
+        std::cout << "Energy visualization updated: "
+                  << energyRenderer.getWidth() << " x " << energyRenderer.getHeight() << '\n';
+    }
+    else
+    {
+        showingEnergyMap = false;
+        std::cout << "Energy visualization was not updated.\n";
+    }
+}
+
+void Application::toggleDisplayMode()
+{
+    if (!imageManager.hasImage())
+    {
+        setStatus("No image is loaded.");
+        return;
+    }
+
+    if (!energyRenderer.hasVisualization())
+    {
+        setStatus("Energy visualization is not available.");
+        return;
+    }
+
+    showingEnergyMap = !showingEnergyMap;
+    updateWindowTitle();
 }
 
 void Application::printEnergyDebugInfo() const
@@ -180,6 +231,8 @@ void Application::setStatus(const std::string& message)
 void Application::updateWindowTitle()
 {
     std::string title = WindowTitle;
+    title += showingEnergyMap ? " | Energy Map" : " | Original Image";
+
     if (!statusMessage.empty())
     {
         title += " | " + statusMessage;

@@ -2,7 +2,7 @@
 
 SeamCraft is an interactive desktop application for learning content-aware image resizing with Seam Carving and Dijkstra's Algorithm.
 
-The project is currently at Milestone 3A and contains the first seam-carving computation step: energy map generation.
+The project is currently at Milestone 3B and can compute and visualize the energy map used by seam carving.
 
 ## Features
 
@@ -24,6 +24,9 @@ Current:
 - Shows simple status information in the window title
 - Computes a floating-point energy value for every pixel after image load or reset
 - Keeps the energy map ready internally for future seam carving milestones
+- Displays the energy map as a grayscale visualization
+- Toggles between the original image and energy map with the `E` key
+- Regenerates the energy visualization after image load or reset
 - Prints temporary energy debug statistics to the console
 
 Planned:
@@ -60,7 +63,7 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64
 
 ## Current Milestone
 
-Milestone 3A: Energy calculation.
+Milestone 3B: Energy visualization.
 
 ## Energy Calculation
 
@@ -77,10 +80,26 @@ The current energy model uses the Sobel operator:
 
 Border pixels use replicated-border handling. If the Sobel kernel asks for a neighbor outside the image, SeamCraft reuses the nearest valid edge pixel. This keeps every pixel, including corners, simple to calculate.
 
+## Energy Visualization
+
+`EnergyRenderer` converts the floating-point energy map into a grayscale `sf::Image`, then stores it in an `sf::Texture` and `sf::Sprite` for drawing. It fits the visualization inside the application window, preserves the image aspect ratio, and centers it.
+
+The renderer uses min-max normalization:
+
+- Find the minimum energy value in the map.
+- Find the maximum energy value in the map.
+- Convert each energy value into the range `0` to `255`.
+- The minimum energy becomes black.
+- The maximum energy becomes white.
+- Intermediate values become gray.
+
+If all energy values are the same, the renderer displays them as black because there is no range to stretch.
+
 ## Controls
 
 - Press `O` to open an image from disk
 - Press `R` to reset the current image back to the stored original image
+- Press `E` to toggle between the original image and the energy map
 
 ## Supported Image Formats
 
@@ -99,11 +118,13 @@ SeamCraft/
 |-- include/
 |   |-- Application.hpp
 |   |-- EnergyCalculator.hpp
+|   |-- EnergyRenderer.hpp
 |   |-- ImageManager.hpp
 |   `-- Window.hpp
 |-- src/
 |   |-- Application.cpp
 |   |-- EnergyCalculator.cpp
+|   |-- EnergyRenderer.cpp
 |   |-- ImageManager.cpp
 |   |-- main.cpp
 |   `-- Window.cpp
@@ -126,7 +147,7 @@ From the project root:
 ```bash
 mkdir -p build
 gcc -std=c99 -g -c third_party/tinyfiledialogs/tinyfiledialogs.c -o build/tinyfiledialogs.o
-g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp src/EnergyCalculator.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
+g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp src/EnergyCalculator.cpp src/EnergyRenderer.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
 ```
 
 In VS Code, press `Ctrl+Shift+B` to build and `F5` to debug.
