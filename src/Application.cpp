@@ -138,6 +138,7 @@ void Application::calculateEnergyMap()
     energyCalculator.setImage(imageManager.getCurrentImage());
     energyCalculator.calculate();
     updateEnergyVisualization();
+    rebuildPixelGraph();
     printEnergyDebugInfo();
 }
 
@@ -153,6 +154,12 @@ void Application::updateEnergyVisualization()
         showingEnergyMap = false;
         std::cout << "Energy visualization was not updated.\n";
     }
+}
+
+void Application::rebuildPixelGraph()
+{
+    pixelGraph.build(energyCalculator);
+    printGraphDebugInfo();
 }
 
 void Application::toggleDisplayMode()
@@ -209,6 +216,26 @@ void Application::printEnergyDebugInfo() const
               << "Maximum energy: " << maximumEnergy << '\n'
               << "Average energy: " << averageEnergy << '\n'
               << std::defaultfloat;
+}
+
+void Application::printGraphDebugInfo() const
+{
+    const unsigned int nodeCount = pixelGraph.getNodeCount();
+    const unsigned int edgeCount = pixelGraph.getEdgeCount();
+    const double averageOutgoingDegree = nodeCount == 0
+                                             ? 0.0
+                                             : static_cast<double>(edgeCount) / static_cast<double>(nodeCount);
+
+    std::cout << "Pixel graph rebuilt.\n";
+    std::cout << "Graph image size: " << pixelGraph.getImageWidth()
+              << " x " << pixelGraph.getImageHeight() << '\n';
+    std::cout << "Node count: " << nodeCount << '\n';
+    std::cout << "Edge count: " << edgeCount << '\n';
+    std::cout << std::fixed << std::setprecision(2)
+              << "Average outgoing degree: " << averageOutgoingDegree << '\n'
+              << std::defaultfloat;
+    std::cout << "Vertical connectivity sanity check: "
+              << (pixelGraph.validateVerticalConnectivity() ? "passed" : "failed") << '\n';
 }
 
 void Application::setLoadedStatus()

@@ -29,8 +29,12 @@
 - [x] Fit and center energy visualization in the window
 
 ## Milestone 4
-- [ ] Graph construction
-- [ ] Pixel graph representation
+- [x] Milestone 4A: Pixel graph construction
+- [x] Represent every pixel as one graph node
+- [x] Use deterministic `nodeId = y * imageWidth + x` indexing
+- [x] Connect each pixel to valid down-left, down, and down-right neighbours
+- [x] Use destination pixel energy as edge weight
+- [x] Print temporary graph debug statistics and sanity checks
 
 ## Milestone 5
 - [ ] Dijkstra shortest path

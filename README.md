@@ -2,7 +2,7 @@
 
 SeamCraft is an interactive desktop application for learning content-aware image resizing with Seam Carving and Dijkstra's Algorithm.
 
-The project is currently at Milestone 3B and can compute and visualize the energy map used by seam carving.
+The project is currently at Milestone 4A and can build a pixel graph from the computed energy map.
 
 ## Features
 
@@ -27,11 +27,12 @@ Current:
 - Displays the energy map as a grayscale visualization
 - Toggles between the original image and energy map with the `E` key
 - Regenerates the energy visualization after image load or reset
+- Builds a vertical-seam pixel graph after energy recalculation
+- Prints temporary graph debug statistics to the console
 - Prints temporary energy debug statistics to the console
 
 Planned:
 
-- Pixel graph construction
 - Dijkstra shortest path seam search
 - Seam highlighting and removal
 - Saving resized images
@@ -63,7 +64,7 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64
 
 ## Current Milestone
 
-Milestone 3B: Energy visualization.
+Milestone 4A: Pixel graph construction.
 
 ## Energy Calculation
 
@@ -95,6 +96,35 @@ The renderer uses min-max normalization:
 
 If all energy values are the same, the renderer displays them as black because there is no range to stretch.
 
+## Pixel Graph
+
+`PixelGraph` converts the energy map into a graph that a later Dijkstra milestone can use. Each pixel becomes exactly one `GraphNode`.
+
+Each node stores:
+
+- unique node id
+- x coordinate
+- y coordinate
+- energy value
+
+Node ids are deterministic:
+
+```text
+nodeId = y * imageWidth + x
+```
+
+This makes it simple to move between a pixel coordinate and a node id. `nodeIdFromCoordinates(x, y)` applies the formula, and `coordinatesFromNodeId(nodeId)` reverses it with division and modulo.
+
+The graph is built only for vertical seam carving. Each pixel connects to valid pixels directly below it:
+
+- down-left: `(x - 1, y + 1)`
+- down: `(x, y + 1)`
+- down-right: `(x + 1, y + 1)`
+
+Edges outside the image are skipped. Because seams move from top to bottom, bottom-row pixels have no outgoing edges. Corner pixels have fewer neighbours than interior pixels.
+
+The edge weight is the energy value of the destination pixel. This means a future shortest-path algorithm will pay the cost of entering the next pixel in the seam.
+
 ## Controls
 
 - Press `O` to open an image from disk
@@ -120,6 +150,7 @@ SeamCraft/
 |   |-- EnergyCalculator.hpp
 |   |-- EnergyRenderer.hpp
 |   |-- ImageManager.hpp
+|   |-- PixelGraph.hpp
 |   `-- Window.hpp
 |-- src/
 |   |-- Application.cpp
@@ -127,6 +158,7 @@ SeamCraft/
 |   |-- EnergyRenderer.cpp
 |   |-- ImageManager.cpp
 |   |-- main.cpp
+|   |-- PixelGraph.cpp
 |   `-- Window.cpp
 |-- third_party/
 |   `-- tinyfiledialogs/
@@ -147,7 +179,7 @@ From the project root:
 ```bash
 mkdir -p build
 gcc -std=c99 -g -c third_party/tinyfiledialogs/tinyfiledialogs.c -o build/tinyfiledialogs.o
-g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp src/EnergyCalculator.cpp src/EnergyRenderer.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
+g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/Window.cpp src/ImageManager.cpp src/EnergyCalculator.cpp src/EnergyRenderer.cpp src/PixelGraph.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
 ```
 
 In VS Code, press `Ctrl+Shift+B` to build and `F5` to debug.
@@ -160,7 +192,6 @@ See `PROJECT_PLAN.md` for the full milestone roadmap.
 
 ## Future Work
 
-- Graph construction
 - Dijkstra seam search
 - Seam carving
 - Animation

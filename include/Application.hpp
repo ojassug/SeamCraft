@@ -4,6 +4,7 @@
 #include "EnergyCalculator.hpp"
 #include "EnergyRenderer.hpp"
 #include "ImageManager.hpp"
+#include "PixelGraph.hpp"
 #include "Window.hpp"
 
 // Owns the high-level application lifecycle and main loop.
@@ -21,8 +22,10 @@ private:
     void resetImage();
     void calculateEnergyMap();
     void updateEnergyVisualization();
+    void rebuildPixelGraph();
     void toggleDisplayMode();
     void printEnergyDebugInfo() const;
+    void printGraphDebugInfo() const;
     void setLoadedStatus();
     void setStatus(const std::string& message);
     void updateWindowTitle();
@@ -31,6 +34,7 @@ private:
     ImageManager imageManager;
     EnergyCalculator energyCalculator;
     EnergyRenderer energyRenderer;
+    PixelGraph pixelGraph;
     std::string statusMessage;
     bool showingEnergyMap = false;
 };
