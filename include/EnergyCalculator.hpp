@@ -13,7 +13,6 @@ public:
     void setImage(const sf::Image& image);
     void calculate();
 
-    float getEnergy(unsigned int x, unsigned int y) const;
     const EnergyMap& getEnergyMap() const;
     unsigned int getWidth() const;
     unsigned int getHeight() const;

@@ -33,7 +33,6 @@ public:
     unsigned int getImageWidth() const;
     unsigned int getImageHeight() const;
 
-    unsigned int nodeIdFromCoordinates(unsigned int x, unsigned int y) const;
     std::pair<unsigned int, unsigned int> coordinatesFromNodeId(unsigned int nodeId) const;
     bool validateVerticalConnectivity() const;
 

@@ -77,16 +77,6 @@ void EnergyCalculator::calculate()
     }
 }
 
-float EnergyCalculator::getEnergy(unsigned int x, unsigned int y) const
-{
-    if (y >= energyMap.size() || x >= energyMap[y].size())
-    {
-        throw std::out_of_range("Energy coordinate is outside the energy map.");
-    }
-
-    return energyMap[y][x];
-}
-
 const EnergyCalculator::EnergyMap& EnergyCalculator::getEnergyMap() const
 {
     return energyMap;

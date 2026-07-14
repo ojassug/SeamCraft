@@ -93,16 +93,6 @@ unsigned int PixelGraph::getImageHeight() const
     return imageHeight;
 }
 
-unsigned int PixelGraph::nodeIdFromCoordinates(unsigned int x, unsigned int y) const
-{
-    if (x >= imageWidth || y >= imageHeight)
-    {
-        throw std::out_of_range("Pixel coordinate is outside the graph image bounds.");
-    }
-
-    return (y * imageWidth) + x;
-}
-
 std::pair<unsigned int, unsigned int> PixelGraph::coordinatesFromNodeId(unsigned int nodeId) const
 {
     if (nodeId >= nodes.size() || imageWidth == 0)
