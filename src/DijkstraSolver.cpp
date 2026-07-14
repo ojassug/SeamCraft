@@ -19,41 +19,9 @@ void DijkstraSolver::solve(const PixelGraph& graph)
         return;
     }
 
-    // -------------------------------------------------------------------------
-    // Dijkstra's algorithm for the minimum-energy vertical seam.
-    //
-    // Overview:
-    //   We want the path from any top-row pixel to any bottom-row pixel whose
-    //   total edge weight is smallest. The PixelGraph already encodes vertical
-    //   seam connectivity (each pixel connects to up to three pixels in the
-    //   next row), and edge weights equal the destination pixel's energy.
-    //
-    // Data structures:
-    //   distance[nodeId]    – the shortest distance found so far from any
-    //                         top-row pixel to this node.
-    //   predecessor[nodeId] – the node id we came from on the shortest path.
-    //                         Set to UINT_MAX when no predecessor exists.
-    //   visited[nodeId]     – true once the node has been permanently settled.
-    //   priority queue      – a min-heap of (distance, nodeId) pairs so that
-    //                         the node with the smallest tentative distance is
-    //                         processed first.
-    //
-    // Initialization:
-    //   Every top-row pixel is a potential starting point. Its initial distance
-    //   is its own energy value (the cost of including that pixel in the seam).
-    //   All other distances start at infinity.
-    //
-    // Relaxation:
-    //   When we settle a node u, we look at each outgoing edge (u -> v) with
-    //   weight w. If distance[u] + w < distance[v], we update distance[v] and
-    //   record u as the predecessor of v, then push v into the priority queue.
-    //
-    // Termination:
-    //   After the priority queue is empty, every reachable node has its final
-    //   shortest distance. We scan the bottom row to find which pixel has the
-    //   smallest distance, then walk the predecessor chain back to the top row
-    //   to reconstruct the seam.
-    // -------------------------------------------------------------------------
+    // Dijkstra's algorithm: find the minimum-energy vertical seam.
+    // Edge weight equals destination pixel energy; top-row pixels are seeded
+    // with their own energy. Predecessor chain is walked back from best bottom node.
 
     constexpr float Infinity = std::numeric_limits<float>::max();
     constexpr unsigned int NoPredecessor = std::numeric_limits<unsigned int>::max();

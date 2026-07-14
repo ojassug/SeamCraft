@@ -38,7 +38,6 @@ public:
     bool validateVerticalConnectivity() const;
 
 private:
-    void addVerticalEdgesForNode(const GraphNode& node);
     bool isValidCoordinate(int x, int y) const;
 
     std::vector<GraphNode> nodes;

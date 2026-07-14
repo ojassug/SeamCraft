@@ -156,28 +156,6 @@ bool PixelGraph::validateVerticalConnectivity() const
     return true;
 }
 
-void PixelGraph::addVerticalEdgesForNode(const GraphNode& node)
-{
-    // A vertical seam moves downward one row at a time, so each pixel only connects
-    // to the valid down-left, down, and down-right pixels in the next row.
-    const int nextY = static_cast<int>(node.y) + 1;
-    for (int xOffset = -1; xOffset <= 1; ++xOffset)
-    {
-        const int nextX = static_cast<int>(node.x) + xOffset;
-        if (!isValidCoordinate(nextX, nextY))
-        {
-            continue;
-        }
-
-        const unsigned int neighbourId = nodeIdFromCoordinates(
-            static_cast<unsigned int>(nextX),
-            static_cast<unsigned int>(nextY));
-
-        adjacencyList[node.id].push_back({neighbourId, nodes[neighbourId].energy});
-        ++edgeCount;
-    }
-}
-
 bool PixelGraph::isValidCoordinate(int x, int y) const
 {
     return x >= 0 &&
