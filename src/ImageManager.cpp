@@ -72,6 +72,18 @@ bool ImageManager::resetImage()
     return updateTexture();
 }
 
+bool ImageManager::setCurrentImage(const sf::Image& image)
+{
+    if (!hasImage())
+    {
+        lastError = "No image is loaded.";
+        return false;
+    }
+
+    currentImage = image;
+    return updateTexture();
+}
+
 bool ImageManager::hasImage() const
 {
     return sprite.has_value();

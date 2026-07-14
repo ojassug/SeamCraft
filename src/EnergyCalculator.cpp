@@ -14,25 +14,45 @@ void EnergyCalculator::setImage(const sf::Image& image)
 
 void EnergyCalculator::calculate()
 {
-    energyMap.assign(height, std::vector<float>(width, 0.0f));
+    energyMap.resize(height);
+    for (std::vector<float>& row : energyMap)
+    {
+        row.assign(width, 0.0f);
+    }
 
     if (width == 0 || height == 0)
     {
         return;
     }
 
+    std::vector<float> grayscaleValues(width * height, 0.0f);
     for (unsigned int y = 0; y < height; ++y)
     {
         for (unsigned int x = 0; x < width; ++x)
         {
-            const float topLeft = getGray(clampX(static_cast<int>(x) - 1), clampY(static_cast<int>(y) - 1));
-            const float top = getGray(x, clampY(static_cast<int>(y) - 1));
-            const float topRight = getGray(clampX(static_cast<int>(x) + 1), clampY(static_cast<int>(y) - 1));
-            const float left = getGray(clampX(static_cast<int>(x) - 1), y);
-            const float right = getGray(clampX(static_cast<int>(x) + 1), y);
-            const float bottomLeft = getGray(clampX(static_cast<int>(x) - 1), clampY(static_cast<int>(y) + 1));
-            const float bottom = getGray(x, clampY(static_cast<int>(y) + 1));
-            const float bottomRight = getGray(clampX(static_cast<int>(x) + 1), clampY(static_cast<int>(y) + 1));
+            grayscaleValues[(y * width) + x] = getGray(x, y);
+        }
+    }
+
+    for (unsigned int y = 0; y < height; ++y)
+    {
+        const unsigned int topY = clampY(static_cast<int>(y) - 1);
+        const unsigned int bottomY = clampY(static_cast<int>(y) + 1);
+        std::vector<float>& energyRow = energyMap[y];
+
+        for (unsigned int x = 0; x < width; ++x)
+        {
+            const unsigned int leftX = clampX(static_cast<int>(x) - 1);
+            const unsigned int rightX = clampX(static_cast<int>(x) + 1);
+
+            const float topLeft = grayscaleValues[(topY * width) + leftX];
+            const float top = grayscaleValues[(topY * width) + x];
+            const float topRight = grayscaleValues[(topY * width) + rightX];
+            const float left = grayscaleValues[(y * width) + leftX];
+            const float right = grayscaleValues[(y * width) + rightX];
+            const float bottomLeft = grayscaleValues[(bottomY * width) + leftX];
+            const float bottom = grayscaleValues[(bottomY * width) + x];
+            const float bottomRight = grayscaleValues[(bottomY * width) + rightX];
 
             // Sobel horizontal kernel:
             // -1  0  1
@@ -51,8 +71,8 @@ void EnergyCalculator::calculate()
                 (-1.0f * topLeft) + (-2.0f * top) + (-1.0f * topRight) +
                 (1.0f * bottomLeft) + (2.0f * bottom) + (1.0f * bottomRight);
 
-            energyMap[y][x] = std::sqrt((horizontalGradient * horizontalGradient) +
-                                        (verticalGradient * verticalGradient));
+            energyRow[x] = std::sqrt((horizontalGradient * horizontalGradient) +
+                                     (verticalGradient * verticalGradient));
         }
     }
 }

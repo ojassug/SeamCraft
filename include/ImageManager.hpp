@@ -11,6 +11,7 @@ class ImageManager
 public:
     bool loadImage(const std::string& filePath);
     bool resetImage();
+    bool setCurrentImage(const sf::Image& image);
 
     bool hasImage() const;
     void fitToWindow(const sf::Vector2u& windowSize);

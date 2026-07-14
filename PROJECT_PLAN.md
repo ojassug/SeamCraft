@@ -46,10 +46,13 @@
 - [x] Create SeamRenderer for seam overlay
 - [x] Convert node IDs to pixel coordinates
 - [x] Add 'S' key to toggle seam visibility
-- [ ] Seam removal
+- [x] Seam removal
 
 ## Milestone 6
-- [ ] Seam highlighting
+- [x] Milestone 6: Vertical seam removal
+- [x] Implement SeamRemover class to remove one vertical seam from sf::Image
+- [x] Add keyboard shortcut 'C' to carve a single seam
+- [x] Automatically recompute energy, rebuild graph, and update seam visualization on carve
 - [ ] Seam removal animation
 
 ## Milestone 7

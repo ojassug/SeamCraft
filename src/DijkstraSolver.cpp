@@ -58,21 +58,25 @@ void DijkstraSolver::solve(const PixelGraph& graph)
     constexpr float Infinity = std::numeric_limits<float>::max();
     constexpr unsigned int NoPredecessor = std::numeric_limits<unsigned int>::max();
 
-    // Allocate distance, predecessor, and visited arrays for every node.
-    std::vector<float> distance(nodeCount, Infinity);
-    std::vector<unsigned int> predecessor(nodeCount, NoPredecessor);
-    std::vector<bool> visited(nodeCount, false);
+    // Allocate or reuse distance, predecessor, and visited arrays for every node.
+    distance.assign(nodeCount, Infinity);
+    predecessor.assign(nodeCount, NoPredecessor);
+    visited.assign(nodeCount, 0);
 
     // Min-heap: pairs of (distance, nodeId). Smallest distance on top.
     using QueueEntry = std::pair<float, unsigned int>;
-    std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<QueueEntry>> minHeap;
+    std::vector<QueueEntry> heapStorage;
+    heapStorage.reserve(nodeCount);
+    std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<QueueEntry>> minHeap(
+        std::greater<QueueEntry>(),
+        std::move(heapStorage));
 
     // Seed the priority queue with every pixel in the top row (y == 0).
     // The initial distance for a top-row pixel is its own energy, because
     // the seam must include that pixel.
     for (unsigned int x = 0; x < imageWidth; ++x)
     {
-        const unsigned int startNodeId = graph.nodeIdFromCoordinates(x, 0);
+        const unsigned int startNodeId = x;
         const float startEnergy = graph.getNode(startNodeId).energy;
         distance[startNodeId] = startEnergy;
         minHeap.push({startEnergy, startNodeId});
@@ -92,7 +96,7 @@ void DijkstraSolver::solve(const PixelGraph& graph)
             continue;
         }
 
-        visited[currentNodeId] = true;
+        visited[currentNodeId] = 1;
 
         // Relax every outgoing edge from the current node.
         for (const GraphEdge& edge : graph.getNeighbours(currentNodeId))
@@ -115,12 +119,13 @@ void DijkstraSolver::solve(const PixelGraph& graph)
     // The bottom row is at y == imageHeight - 1.
     // -------------------------------------------------------------------------
     const unsigned int bottomRow = imageHeight - 1;
+    const unsigned int bottomRowStart = bottomRow * imageWidth;
     unsigned int bestBottomNodeId = 0;
     float bestBottomDistance = Infinity;
 
     for (unsigned int x = 0; x < imageWidth; ++x)
     {
-        const unsigned int bottomNodeId = graph.nodeIdFromCoordinates(x, bottomRow);
+        const unsigned int bottomNodeId = bottomRowStart + x;
         if (distance[bottomNodeId] < bestBottomDistance)
         {
             bestBottomDistance = distance[bottomNodeId];

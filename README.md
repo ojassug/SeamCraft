@@ -2,7 +2,7 @@
 
 SeamCraft is an interactive desktop application for learning content-aware image resizing with Seam Carving and Dijkstra's Algorithm.
 
-The project is currently at Milestone 5B and can visualize the minimum-energy vertical seam computed by Dijkstra's algorithm.
+The project is currently at Milestone 6 and can remove vertical seams dynamically using Seam Carving.
 
 ## Features
 
@@ -34,10 +34,13 @@ Current:
 - Converts Dijkstra node IDs back to pixel coordinates
 - Draws the computed seam as a bright red overlay on top of the original image
 - Toggles seam visualization with the `S` key
+- Removes a single vertical seam dynamically with the `C` key, shrinking the image width by one pixel
+- Automatically updates the energy map, graph, shortest seam, and seam overlay on removal
+- Toggles continuous seam carving with the `Space` key, removing seams at a fixed interval while the window remains responsive
 
 Planned:
 
-- Seam removal
+- Seam removal animation
 
 ## Tech Stack
 
@@ -66,7 +69,7 @@ pacman -S --needed mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb mingw-w64
 
 ## Current Milestone
 
-Milestone 5B: Seam visualization.
+Milestone 6: Vertical seam removal.
 ## Energy Calculation
 
 Seam carving removes low-importance paths through an image. Before SeamCraft can find those paths, it needs an energy map. The energy map stores one `float` value per pixel, where larger values usually mean stronger visual detail such as edges or texture.
@@ -157,12 +160,23 @@ Automatic validation checks:
 - It uses the same scaling and positioning logic (`fitToWindow`) as the other renderers, ensuring the overlay perfectly aligns with the displayed image.
 - It does not modify the original image data and does not recompute the seam.
 
+## Seam Removal
+
+`SeamRemover` handles removing the computed seam from an `sf::Image` to reduce the image's width.
+
+- It takes the active image, the seam node IDs, and the `PixelGraph`.
+- It creates a new image that is exactly one pixel narrower.
+- For each row, it copies all pixels to the left of the seam as-is, and shifts all pixels to the right of the seam left by one pixel.
+- It contains no rendering, graph-building, or pathfinding logic.
+
 ## Controls
 
 - Press `O` to open an image from disk
 - Press `R` to reset the current image back to the stored original image
 - Press `E` to toggle between the original image and the energy map
 - Press `S` to toggle the seam overlay on the original image
+- Press `C` to carve (remove) the active shortest vertical seam from the image
+- Press `Space` to start or stop continuous seam carving
 
 ## Supported Image Formats
 
@@ -186,6 +200,7 @@ SeamCraft/
 |   |-- ImageManager.hpp
 |   |-- PixelGraph.hpp
 |   |-- SeamRenderer.hpp
+|   |-- SeamRemover.hpp
 |   `-- Window.hpp
 |-- src/
 |   |-- Application.cpp
@@ -196,6 +211,7 @@ SeamCraft/
 |   |-- main.cpp
 |   |-- PixelGraph.cpp
 |   |-- SeamRenderer.cpp
+|   |-- SeamRemover.cpp
 |   `-- Window.cpp
 |-- third_party/
 |   `-- tinyfiledialogs/
@@ -216,7 +232,7 @@ From the project root:
 ```bash
 mkdir -p build
 gcc -std=c99 -g -c third_party/tinyfiledialogs/tinyfiledialogs.c -o build/tinyfiledialogs.o
-g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/DijkstraSolver.cpp src/Window.cpp src/ImageManager.cpp src/EnergyCalculator.cpp src/EnergyRenderer.cpp src/PixelGraph.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
+g++ -std=c++17 -Wall -Wextra -pedantic -g src/main.cpp src/Application.cpp src/DijkstraSolver.cpp src/Window.cpp src/ImageManager.cpp src/EnergyCalculator.cpp src/EnergyRenderer.cpp src/PixelGraph.cpp src/SeamRenderer.cpp src/SeamRemover.cpp build/tinyfiledialogs.o -Iinclude -Ithird_party/tinyfiledialogs -lsfml-graphics -lsfml-window -lsfml-system -lcomdlg32 -lole32 -o build/SeamCraft.exe
 ```
 
 In VS Code, press `Ctrl+Shift+B` to build and `F5` to debug.

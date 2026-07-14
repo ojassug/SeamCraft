@@ -9,23 +9,47 @@ void PixelGraph::build(const EnergyCalculator& energyCalculator)
     edgeCount = 0;
 
     const unsigned int totalNodeCount = imageWidth * imageHeight;
-    nodes.clear();
-    adjacencyList.clear();
-    nodes.reserve(totalNodeCount);
+    nodes.resize(totalNodeCount);
+    adjacencyList.reserve(totalNodeCount);
     adjacencyList.resize(totalNodeCount);
+
+    const EnergyCalculator::EnergyMap& energyMap = energyCalculator.getEnergyMap();
 
     for (unsigned int y = 0; y < imageHeight; ++y)
     {
+        const std::vector<float>& energyRow = energyMap[y];
         for (unsigned int x = 0; x < imageWidth; ++x)
         {
-            const unsigned int nodeId = nodeIdFromCoordinates(x, y);
-            nodes.push_back({nodeId, x, y, energyCalculator.getEnergy(x, y)});
-        }
-    }
+            const unsigned int nodeId = (y * imageWidth) + x;
+            nodes[nodeId] = {nodeId, x, y, energyRow[x]};
 
-    for (const GraphNode& node : nodes)
-    {
-        addVerticalEdgesForNode(node);
+            std::vector<GraphEdge>& edges = adjacencyList[nodeId];
+            edges.clear();
+
+            if (y + 1 >= imageHeight)
+            {
+                continue;
+            }
+
+            const unsigned int nextRow = y + 1;
+            const unsigned int nextRowStart = nextRow * imageWidth;
+            const std::vector<float>& nextEnergyRow = energyMap[nextRow];
+            const unsigned int firstNextX = x == 0 ? 0 : x - 1;
+            const unsigned int lastNextX = (x + 1 >= imageWidth) ? imageWidth - 1 : x + 1;
+            const unsigned int expectedEdgeCount = (lastNextX - firstNextX) + 1;
+
+            if (edges.capacity() < expectedEdgeCount)
+            {
+                edges.reserve(expectedEdgeCount);
+            }
+
+            for (unsigned int nextX = firstNextX; nextX <= lastNextX; ++nextX)
+            {
+                const unsigned int neighbourId = nextRowStart + nextX;
+                edges.push_back({neighbourId, nextEnergyRow[nextX]});
+                ++edgeCount;
+            }
+        }
     }
 }
 

@@ -20,6 +20,9 @@ public:
 private:
     // The seam stored as node ids ordered from top row (index 0) to bottom row (index height-1).
     std::vector<unsigned int> seam;
+    std::vector<float> distance;
+    std::vector<unsigned int> predecessor;
+    std::vector<unsigned char> visited;
     float totalEnergy = 0.0f;
 };
 

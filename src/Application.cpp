@@ -3,6 +3,7 @@
 #include "tinyfiledialogs.h"
 
 #include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -14,7 +15,15 @@ constexpr unsigned int WindowWidth = 1200;
 constexpr unsigned int WindowHeight = 800;
 constexpr const char WindowTitle[] = "SeamCraft";
 constexpr const char StartupImagePath[] = "assets/images/sample.png";
-constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy | S: Toggle Seam";
+constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy | S: Toggle Seam | C: Carve | Space: Auto Carve";
+
+using ProfilingClock = std::chrono::high_resolution_clock;
+
+long long elapsedMilliseconds(const ProfilingClock::time_point& startTime,
+                              const ProfilingClock::time_point& endTime)
+{
+    return std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+}
 }
 
 Application::Application()
@@ -32,6 +41,8 @@ void Application::run()
         window.handleEvents([this](const sf::Event& event) {
             handleEvent(event);
         });
+
+        updateContinuousCarving();
 
         const sf::Vector2u windowSize = window.getRenderWindow().getSize();
         if (showingEnergyMap)
@@ -106,10 +117,20 @@ void Application::handleEvent(const sf::Event& event)
     {
         toggleSeamVisibility();
     }
+    else if (keyPressed->code == sf::Keyboard::Key::C)
+    {
+        removeActiveSeam();
+    }
+    else if (keyPressed->code == sf::Keyboard::Key::Space)
+    {
+        toggleContinuousCarving();
+    }
 }
 
 void Application::openImage()
 {
+    stopContinuousCarving();
+
     const char* filterPatterns[] = {"*.png", "*.jpg", "*.jpeg"};
     const char* selectedPath = tinyfd_openFileDialog(
         "Open Image",
@@ -138,6 +159,8 @@ void Application::openImage()
 
 void Application::resetImage()
 {
+    stopContinuousCarving();
+
     if (imageManager.resetImage())
     {
         calculateEnergyMap();
@@ -213,6 +236,206 @@ void Application::toggleSeamVisibility()
 
     showingSeam = !showingSeam;
     updateWindowTitle();
+}
+
+void Application::toggleContinuousCarving()
+{
+    if (continuousCarvingEnabled)
+    {
+        stopContinuousCarving();
+        return;
+    }
+
+    if (!imageManager.hasImage())
+    {
+        setStatus("No image is loaded.");
+        return;
+    }
+
+    if (!dijkstraSolver.hasSeam())
+    {
+        setStatus("No seam available to carve.");
+        return;
+    }
+
+    continuousCarvingEnabled = true;
+    continuousCarvingClock.restart();
+    setStatus("Continuous carving started.");
+}
+
+void Application::stopContinuousCarving()
+{
+    if (!continuousCarvingEnabled)
+    {
+        return;
+    }
+
+    continuousCarvingEnabled = false;
+    setStatus("Continuous carving stopped.");
+}
+
+void Application::updateContinuousCarving()
+{
+    if (!continuousCarvingEnabled)
+    {
+        return;
+    }
+
+    if (continuousCarvingClock.getElapsedTime() < continuousCarvingInterval)
+    {
+        return;
+    }
+
+    continuousCarvingClock.restart();
+
+    if (!removeActiveSeam())
+    {
+        continuousCarvingEnabled = false;
+        updateWindowTitle();
+    }
+}
+
+bool Application::removeActiveSeam()
+{
+    if (!imageManager.hasImage())
+    {
+        setStatus("No image is loaded.");
+        return false;
+    }
+
+    if (!dijkstraSolver.hasSeam())
+    {
+        setStatus("No seam available to carve.");
+        return false;
+    }
+
+    try
+    {
+        SeamProfilingReport profilingReport;
+        const sf::Image& currentImage = imageManager.getCurrentImage();
+        const std::vector<unsigned int>& seam = dijkstraSolver.getSeam();
+        const sf::Vector2u inputImageSize = currentImage.getSize();
+
+        profilingReport.inputWidth = inputImageSize.x;
+        profilingReport.inputHeight = inputImageSize.y;
+
+        const auto totalStartTime = ProfilingClock::now();
+        const auto seamRemovalStartTime = ProfilingClock::now();
+        sf::Image carvedImage = seamRemover.removeSeam(currentImage, seam, pixelGraph);
+        const auto seamRemovalEndTime = ProfilingClock::now();
+        profilingReport.seamRemovalMilliseconds = elapsedMilliseconds(seamRemovalStartTime, seamRemovalEndTime);
+
+        const auto imageManagerUpdateStartTime = ProfilingClock::now();
+        if (imageManager.setCurrentImage(carvedImage))
+        {
+            const auto imageManagerUpdateEndTime = ProfilingClock::now();
+            profilingReport.imageManagerUpdateMilliseconds =
+                elapsedMilliseconds(imageManagerUpdateStartTime, imageManagerUpdateEndTime);
+            profilingReport.outputWidth = imageManager.getWidth();
+            profilingReport.outputHeight = imageManager.getHeight();
+
+            const auto energyImageSetupStartTime = ProfilingClock::now();
+            energyCalculator.setImage(imageManager.getCurrentImage());
+            const auto energyImageSetupEndTime = ProfilingClock::now();
+            profilingReport.energyImageSetupMilliseconds =
+                elapsedMilliseconds(energyImageSetupStartTime, energyImageSetupEndTime);
+
+            const auto energyCalculationStartTime = ProfilingClock::now();
+            energyCalculator.calculate();
+            const auto energyCalculationEndTime = ProfilingClock::now();
+            profilingReport.energyCalculationMilliseconds =
+                elapsedMilliseconds(energyCalculationStartTime, energyCalculationEndTime);
+
+            const auto energyRendererUpdateStartTime = ProfilingClock::now();
+            updateEnergyVisualization();
+            const auto energyRendererUpdateEndTime = ProfilingClock::now();
+            profilingReport.energyRendererUpdateMilliseconds =
+                elapsedMilliseconds(energyRendererUpdateStartTime, energyRendererUpdateEndTime);
+
+            const auto energyDebugOutputStartTime = ProfilingClock::now();
+            printEnergyDebugInfo();
+            const auto energyDebugOutputEndTime = ProfilingClock::now();
+            profilingReport.energyDebugOutputMilliseconds =
+                elapsedMilliseconds(energyDebugOutputStartTime, energyDebugOutputEndTime);
+
+            const auto pixelGraphConstructionStartTime = ProfilingClock::now();
+            pixelGraph.build(energyCalculator);
+            const auto pixelGraphConstructionEndTime = ProfilingClock::now();
+            profilingReport.pixelGraphConstructionMilliseconds =
+                elapsedMilliseconds(pixelGraphConstructionStartTime, pixelGraphConstructionEndTime);
+            profilingReport.graphNodeCount = pixelGraph.getNodeCount();
+            profilingReport.graphEdgeCount = pixelGraph.getEdgeCount();
+
+            const auto graphDebugOutputStartTime = ProfilingClock::now();
+            printGraphDebugInfo();
+            const auto graphDebugOutputEndTime = ProfilingClock::now();
+            profilingReport.graphDebugOutputMilliseconds =
+                elapsedMilliseconds(graphDebugOutputStartTime, graphDebugOutputEndTime);
+
+            const auto dijkstraStartTime = ProfilingClock::now();
+            dijkstraSolver.solve(pixelGraph);
+            const auto dijkstraEndTime = ProfilingClock::now();
+            profilingReport.dijkstraMilliseconds = elapsedMilliseconds(dijkstraStartTime, dijkstraEndTime);
+
+            const auto seamDebugOutputStartTime = ProfilingClock::now();
+            printSeamDebugInfo();
+            const auto seamDebugOutputEndTime = ProfilingClock::now();
+            profilingReport.seamDebugOutputMilliseconds =
+                elapsedMilliseconds(seamDebugOutputStartTime, seamDebugOutputEndTime);
+
+            const auto seamRendererUpdateStartTime = ProfilingClock::now();
+            seamRenderer.updateFromSeam(dijkstraSolver.getSeam(), pixelGraph);
+            const auto seamRendererUpdateEndTime = ProfilingClock::now();
+            profilingReport.seamRendererUpdateMilliseconds =
+                elapsedMilliseconds(seamRendererUpdateStartTime, seamRendererUpdateEndTime);
+
+            std::ostringstream status;
+            status << "Carved seam: " << imageManager.getWidth() << " x " << imageManager.getHeight();
+            setStatus(status.str());
+
+            const auto totalEndTime = ProfilingClock::now();
+            profilingReport.totalProcessingMilliseconds = elapsedMilliseconds(totalStartTime, totalEndTime);
+            printSeamProfilingReport(profilingReport);
+            return true;
+        }
+        else
+        {
+            const auto imageManagerUpdateEndTime = ProfilingClock::now();
+            profilingReport.imageManagerUpdateMilliseconds =
+                elapsedMilliseconds(imageManagerUpdateStartTime, imageManagerUpdateEndTime);
+            setStatus("Failed to update image after carving. " + imageManager.getLastError());
+            return false;
+        }
+    }
+    catch (const std::exception& e)
+    {
+        setStatus("Carving error: " + std::string(e.what()));
+        return false;
+    }
+}
+
+void Application::printSeamProfilingReport(const SeamProfilingReport& report) const
+{
+    std::cout << "\n========== SeamCraft Profiling Report ==========\n";
+    std::cout << "Image resolution: "
+              << report.inputWidth << " x " << report.inputHeight
+              << " -> " << report.outputWidth << " x " << report.outputHeight << '\n';
+    std::cout << "Graph nodes: " << report.graphNodeCount << '\n';
+    std::cout << "Graph edges: " << report.graphEdgeCount << '\n';
+    std::cout << "Timings (milliseconds):\n";
+    std::cout << "  Seam removal: " << report.seamRemovalMilliseconds << '\n';
+    std::cout << "  ImageManager update: " << report.imageManagerUpdateMilliseconds << '\n';
+    std::cout << "  Energy image setup/copy: " << report.energyImageSetupMilliseconds << '\n';
+    std::cout << "  Energy calculation: " << report.energyCalculationMilliseconds << '\n';
+    std::cout << "  EnergyRenderer update: " << report.energyRendererUpdateMilliseconds << '\n';
+    std::cout << "  Energy debug statistics/output: " << report.energyDebugOutputMilliseconds << '\n';
+    std::cout << "  PixelGraph construction: " << report.pixelGraphConstructionMilliseconds << '\n';
+    std::cout << "  PixelGraph debug validation/output: " << report.graphDebugOutputMilliseconds << '\n';
+    std::cout << "  Dijkstra shortest-path computation: " << report.dijkstraMilliseconds << '\n';
+    std::cout << "  Seam debug validation/output: " << report.seamDebugOutputMilliseconds << '\n';
+    std::cout << "  SeamRenderer update: " << report.seamRendererUpdateMilliseconds << '\n';
+    std::cout << "  Total processing time: " << report.totalProcessingMilliseconds << '\n';
+    std::cout << "================================================\n\n";
 }
 
 void Application::printEnergyDebugInfo() const
@@ -332,6 +555,11 @@ void Application::updateWindowTitle()
     if (showingSeam)
     {
         title += " + Seam";
+    }
+
+    if (continuousCarvingEnabled)
+    {
+        title += " | Continuous Carving";
     }
 
     if (!statusMessage.empty())
