@@ -117,7 +117,7 @@ Node ids are deterministic:
 nodeId = y * imageWidth + x
 ```
 
-This makes it simple to move between a pixel coordinate and a node id. `nodeIdFromCoordinates(x, y)` applies the formula, and `coordinatesFromNodeId(nodeId)` reverses it with division and modulo.
+This makes it simple to move between a pixel coordinate and a node id. `coordinatesFromNodeId(nodeId)` reverses it with division and modulo.
 
 The graph is built only for vertical seam carving. Each pixel connects to valid pixels directly below it:
 
