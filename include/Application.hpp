@@ -37,14 +37,6 @@ private:
     void printGraphDebugInfo() const;
     void printSeamDebugInfo() const;
 
-    // Helper methods to keep removeActiveSeam readable.
-    void profileSeamRemoval(const sf::Image& currentImage,
-                            const std::vector<unsigned int>& seam,
-                            sf::Image& carvedImage,
-                            SeamProfilingReport& report);
-    bool profileImageUpdateAndEnergyRecalc(sf::Image& carvedImage,
-                                           SeamProfilingReport& report);
-
     struct SeamProfilingReport
     {
         unsigned int inputWidth = 0;
@@ -66,6 +58,14 @@ private:
         long long seamRendererUpdateMilliseconds = 0;
         long long totalProcessingMilliseconds = 0;
     };
+
+    // Helper methods to keep removeActiveSeam readable.
+    void profileSeamRemoval(const sf::Image& currentImage,
+                            const std::vector<unsigned int>& seam,
+                            sf::Image& carvedImage,
+                            SeamProfilingReport& report);
+    bool profileImageUpdateAndEnergyRecalc(sf::Image& carvedImage,
+                                           SeamProfilingReport& report);
 
     void printSeamProfilingReport(const SeamProfilingReport& report) const;
     void setLoadedStatus();
