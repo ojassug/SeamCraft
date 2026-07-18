@@ -12,6 +12,7 @@ public:
     bool loadImage(const std::string& filePath);
     bool resetImage();
     bool setCurrentImage(const sf::Image& image);
+    bool saveCurrentImage(const std::string& filePath);
 
     bool hasImage() const;
     void fitToWindow(const sf::Vector2u& windowSize);

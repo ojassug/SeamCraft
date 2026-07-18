@@ -33,6 +33,7 @@ private:
     void updateContinuousCarving();
     bool removeActiveSeam();
     void computeShortestSeam();
+    void saveCarvedImage();
     void printEnergyDebugInfo() const;
     void printGraphDebugInfo() const;
     void printSeamDebugInfo() const;

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -15,7 +16,10 @@ constexpr unsigned int WindowWidth = 1200;
 constexpr unsigned int WindowHeight = 800;
 constexpr const char WindowTitle[] = "SeamCraft";
 constexpr const char StartupImagePath[] = "assets/images/sample.png";
-constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy | S: Toggle Seam | C: Carve | Space: Auto Carve";
+constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy | S: Toggle Seam | C: Carve | P: Save | Space: Auto Carve";
+constexpr const char OutputDirectory[] = "assets/output";
+constexpr const char CarvedFilePrefix[] = "carved_";
+constexpr const char CarvedFileExtension[] = ".png";
 
 using ProfilingClock = std::chrono::high_resolution_clock;
 
@@ -120,6 +124,10 @@ void Application::handleEvent(const sf::Event& event)
     else if (keyPressed->code == sf::Keyboard::Key::C)
     {
         removeActiveSeam();
+    }
+    else if (keyPressed->code == sf::Keyboard::Key::P)
+    {
+        saveCarvedImage();
     }
     else if (keyPressed->code == sf::Keyboard::Key::Space)
     {
@@ -429,6 +437,46 @@ bool Application::removeActiveSeam()
     {
         setStatus("Carving error: " + std::string(e.what()));
         return false;
+    }
+}
+
+void Application::saveCarvedImage()
+{
+    if (!imageManager.hasImage())
+    {
+        setStatus("No image is loaded.");
+        return;
+    }
+
+    std::error_code dirError;
+    if (!std::filesystem::exists(OutputDirectory, dirError))
+    {
+        if (!std::filesystem::create_directories(OutputDirectory, dirError))
+        {
+            setStatus("Could not create output directory: " + std::string(OutputDirectory));
+            return;
+        }
+    }
+
+    int nextIndex = 1;
+    std::string candidatePath;
+    do
+    {
+        std::ostringstream fileName;
+        fileName << CarvedFilePrefix
+                 << std::setw(3) << std::setfill('0') << nextIndex
+                 << CarvedFileExtension;
+        candidatePath = std::filesystem::path(OutputDirectory) / fileName.str();
+        ++nextIndex;
+    } while (std::filesystem::exists(candidatePath, dirError));
+
+    if (imageManager.saveCurrentImage(candidatePath))
+    {
+        setStatus("Saved carved image: " + candidatePath);
+    }
+    else
+    {
+        setStatus("Failed to save image. " + imageManager.getLastError());
     }
 }
 

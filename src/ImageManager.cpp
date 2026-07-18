@@ -84,6 +84,31 @@ bool ImageManager::setCurrentImage(const sf::Image& image)
     return updateTexture();
 }
 
+bool ImageManager::saveCurrentImage(const std::string& filePath)
+{
+    lastError.clear();
+
+    if (!hasImage())
+    {
+        lastError = "No image is loaded.";
+        return false;
+    }
+
+    if (filePath.empty())
+    {
+        lastError = "No destination path was provided.";
+        return false;
+    }
+
+    if (!currentImage.saveToFile(filePath))
+    {
+        lastError = "Unable to save image to: " + filePath;
+        return false;
+    }
+
+    return true;
+}
+
 bool ImageManager::hasImage() const
 {
     return sprite.has_value();
