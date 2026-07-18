@@ -466,7 +466,7 @@ void Application::saveCarvedImage()
         fileName << CarvedFilePrefix
                  << std::setw(3) << std::setfill('0') << nextIndex
                  << CarvedFileExtension;
-        candidatePath = std::filesystem::path(OutputDirectory) / fileName.str();
+        candidatePath = (std::filesystem::path(OutputDirectory) / fileName.str()).string();
         ++nextIndex;
     } while (std::filesystem::exists(candidatePath, dirError));
 
