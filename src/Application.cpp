@@ -444,6 +444,9 @@ bool Application::removeActiveSeam()
 
 void Application::saveCarvedImage()
 {
+    std::cout << "[1] Entered saveCarvedImage\n";
+    std::cout << "[2] hasImage = " << (imageManager.hasImage() ? "true" : "false") << "\n";
+
     if (!imageManager.hasImage())
     {
         setStatus("No image is loaded.");
@@ -453,11 +456,17 @@ void Application::saveCarvedImage()
     std::error_code dirError;
     if (!std::filesystem::exists(OutputDirectory, dirError))
     {
+        std::cout << "[3] Output directory exists\n";
         if (!std::filesystem::create_directories(OutputDirectory, dirError))
         {
             setStatus("Could not create output directory: " + std::string(OutputDirectory));
             return;
         }
+        std::cout << "[4] Output directory created\n";
+    }
+    else
+    {
+        std::cout << "[3] Output directory exists\n";
     }
 
     int nextIndex = 1;
@@ -472,6 +481,8 @@ void Application::saveCarvedImage()
         ++nextIndex;
     } while (std::filesystem::exists(candidatePath, dirError));
 
+    std::cout << "[5] Candidate path = " << candidatePath << "\n";
+    std::cout << "[6] Calling saveCurrentImage\n";
     if (imageManager.saveCurrentImage(candidatePath))
     {
         setStatus("Saved carved image: " + candidatePath);

@@ -86,6 +86,7 @@ bool ImageManager::setCurrentImage(const sf::Image& image)
 
 bool ImageManager::saveCurrentImage(const std::string& filePath)
 {
+    std::cout << "[7] Entered saveCurrentImage\n";
     lastError.clear();
 
     if (!hasImage())
@@ -100,12 +101,17 @@ bool ImageManager::saveCurrentImage(const std::string& filePath)
         return false;
     }
 
-    if (!currentImage.saveToFile(std::filesystem::path(filePath)))
+    std::cout << "[8] Calling sf::Image::saveToFile\n";
+    bool saveResult = currentImage.saveToFile(std::filesystem::path(filePath));
+    std::cout << "[9] saveToFile returned " << (saveResult ? "true" : "false") << "\n";
+    if (!saveResult)
     {
         lastError = "Unable to save image to: " + filePath;
+        std::cout << "[10] getLastError = " << lastError << "\n";
         return false;
     }
 
+    std::cout << "[10] getLastError = " << lastError << "\n";
     return true;
 }
 
