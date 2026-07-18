@@ -127,6 +127,8 @@ void Application::handleEvent(const sf::Event& event)
     }
     else if (keyPressed->code == sf::Keyboard::Key::P)
     {
+        std::cout << "========== P KEY PRESSED ==========\n";
+        setStatus("P key detected");
         saveCarvedImage();
     }
     else if (keyPressed->code == sf::Keyboard::Key::Space)
