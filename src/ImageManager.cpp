@@ -1,5 +1,5 @@
 #include "ImageManager.hpp"
-#include <iostream>
+
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -16,7 +16,7 @@ bool ImageManager::loadImage(const std::string& filePath)
 
     if (filePath.empty())
     {
-        lastError = "No image file path was provided.";
+        lastError = "No file path provided.";
         return false;
     }
 
@@ -25,26 +25,26 @@ bool ImageManager::loadImage(const std::string& filePath)
 
     if (!std::filesystem::exists(imagePath, fileError))
     {
-        lastError = "Image file was not found: " + filePath;
+        lastError = "File not found: " + filePath;
         return false;
     }
 
     if (!std::filesystem::is_regular_file(imagePath, fileError))
     {
-        lastError = "Image path is not a regular file: " + filePath;
+        lastError = "Not a file: " + filePath;
         return false;
     }
 
     if (!isSupportedFormat(filePath))
     {
-        lastError = "Unsupported image format. Use PNG, JPG, or JPEG.";
+        lastError = "Unsupported format. Use PNG, JPG, JPEG.";
         return false;
     }
 
     sf::Image loadedImage;
     if (!loadedImage.loadFromFile(filePath))
     {
-        lastError = "Unable to load image. The file may be invalid or corrupted.";
+        lastError = "Cannot load image.";
         return false;
     }
 
@@ -64,7 +64,7 @@ bool ImageManager::resetImage()
 {
     if (!hasImage())
     {
-        lastError = "No image is loaded.";
+        lastError = "No image loaded.";
         return false;
     }
 
@@ -76,7 +76,7 @@ bool ImageManager::setCurrentImage(const sf::Image& image)
 {
     if (!hasImage())
     {
-        lastError = "No image is loaded.";
+        lastError = "No image loaded.";
         return false;
     }
 
@@ -86,32 +86,26 @@ bool ImageManager::setCurrentImage(const sf::Image& image)
 
 bool ImageManager::saveCurrentImage(const std::string& filePath)
 {
-    std::cout << "[7] Entered saveCurrentImage\n";
     lastError.clear();
 
     if (!hasImage())
     {
-        lastError = "No image is loaded.";
+        lastError = "No image loaded.";
         return false;
     }
 
     if (filePath.empty())
     {
-        lastError = "No destination path was provided.";
+        lastError = "No destination path.";
         return false;
     }
 
-    std::cout << "[8] Calling sf::Image::saveToFile\n";
-    bool saveResult = currentImage.saveToFile(std::filesystem::path(filePath));
-    std::cout << "[9] saveToFile returned " << (saveResult ? "true" : "false") << "\n";
-    if (!saveResult)
+    if (!currentImage.saveToFile(std::filesystem::path(filePath)))
     {
-        lastError = "Unable to save image to: " + filePath;
-        std::cout << "[10] getLastError = " << lastError << "\n";
+        lastError = "Save failed: " + filePath;
         return false;
     }
 
-    std::cout << "[10] getLastError = " << lastError << "\n";
     return true;
 }
 
@@ -204,7 +198,7 @@ bool ImageManager::updateTexture()
     if (!texture.loadFromImage(currentImage))
     {
         sprite.reset();
-        lastError = "Unable to create texture from image.";
+        lastError = "Texture creation failed.";
         return false;
     }
 

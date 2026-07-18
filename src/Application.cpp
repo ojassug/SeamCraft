@@ -16,7 +16,7 @@ constexpr unsigned int WindowWidth = 1200;
 constexpr unsigned int WindowHeight = 800;
 constexpr const char WindowTitle[] = "SeamCraft";
 constexpr const char StartupImagePath[] = "assets/images/sample.png";
-constexpr const char TitleHelpText[] = " | O: Open Image | R: Reset | E: Toggle Energy | S: Toggle Seam | C: Carve | P: Save | Space: Auto Carve";
+constexpr const char TitleHelpText[] = " | O: Open | R: Reset | E: Energy | S: Seam | C: Carve | P: Save | Space: Auto";
 constexpr const char OutputDirectory[] = "assets/output";
 constexpr const char CarvedFilePrefix[] = "carved_";
 constexpr const char CarvedFileExtension[] = ".png";
@@ -39,7 +39,6 @@ Application::Application()
 
 void Application::run()
 {
-    // Main loop: process input, prepare the frame, draw, then present it.
     while (window.isOpen())
     {
         window.handleEvents([this](const sf::Event& event) {
@@ -85,15 +84,12 @@ void Application::loadStartupImage()
 {
     if (imageManager.loadImage(StartupImagePath))
     {
-        std::cout << "Loaded startup image: " << imageManager.getFilename() << '\n';
         calculateEnergyMap();
         setLoadedStatus();
     }
     else
     {
-        std::cout << "Startup image was not loaded. " << imageManager.getLastError() << '\n';
-        std::cout << "The application will continue without an image.\n";
-        setStatus("Startup image was not loaded. " + imageManager.getLastError());
+        setStatus("Startup image not loaded: " + imageManager.getLastError());
     }
 }
 
@@ -127,8 +123,6 @@ void Application::handleEvent(const sf::Event& event)
     }
     else if (keyPressed->code == sf::Keyboard::Key::P)
     {
-        std::cout << "========== P KEY PRESSED ==========\n";
-        setStatus("P key detected");
         saveCarvedImage();
     }
     else if (keyPressed->code == sf::Keyboard::Key::Space)
@@ -152,7 +146,7 @@ void Application::openImage()
 
     if (selectedPath == nullptr)
     {
-        setStatus("Open image canceled.");
+        setStatus("Open canceled.");
         return;
     }
 
@@ -163,7 +157,7 @@ void Application::openImage()
     }
     else
     {
-        setStatus("Failed to load image. " + imageManager.getLastError());
+        setStatus("Load failed: " + imageManager.getLastError());
     }
 }
 
@@ -174,11 +168,11 @@ void Application::resetImage()
     if (imageManager.resetImage())
     {
         calculateEnergyMap();
-        setStatus("Reset image: " + imageManager.getFilename());
+        setStatus("Image reset.");
     }
     else
     {
-        setStatus("Reset failed. " + imageManager.getLastError());
+        setStatus("Reset failed: " + imageManager.getLastError());
     }
 }
 
@@ -188,27 +182,23 @@ void Application::calculateEnergyMap()
     energyCalculator.calculate();
     updateEnergyVisualization();
     rebuildPixelGraph();
-    printEnergyDebugInfo();
 }
 
 void Application::updateEnergyVisualization()
 {
     if (energyRenderer.updateFromEnergyMap(energyCalculator.getEnergyMap()))
     {
-        std::cout << "Energy visualization updated: "
-                  << energyRenderer.getWidth() << " x " << energyRenderer.getHeight() << '\n';
+        showingEnergyMap = showingEnergyMap; // unchanged
     }
     else
     {
         showingEnergyMap = false;
-        std::cout << "Energy visualization was not updated.\n";
     }
 }
 
 void Application::rebuildPixelGraph()
 {
     pixelGraph.build(energyCalculator);
-    printGraphDebugInfo();
     computeShortestSeam();
 }
 
@@ -216,13 +206,13 @@ void Application::toggleDisplayMode()
 {
     if (!imageManager.hasImage())
     {
-        setStatus("No image is loaded.");
+        setStatus("No image loaded.");
         return;
     }
 
     if (!energyRenderer.hasVisualization())
     {
-        setStatus("Energy visualization is not available.");
+        setStatus("Energy view unavailable.");
         return;
     }
 
@@ -234,13 +224,13 @@ void Application::toggleSeamVisibility()
 {
     if (!imageManager.hasImage())
     {
-        setStatus("No image is loaded.");
+        setStatus("No image loaded.");
         return;
     }
 
     if (!seamRenderer.hasOverlay())
     {
-        setStatus("Seam visualization is not available.");
+        setStatus("Seam overlay unavailable.");
         return;
     }
 
@@ -258,19 +248,19 @@ void Application::toggleContinuousCarving()
 
     if (!imageManager.hasImage())
     {
-        setStatus("No image is loaded.");
+        setStatus("No image loaded.");
         return;
     }
 
     if (!dijkstraSolver.hasSeam())
     {
-        setStatus("No seam available to carve.");
+        setStatus("No seam to carve.");
         return;
     }
 
     continuousCarvingEnabled = true;
     continuousCarvingClock.restart();
-    setStatus("Continuous carving started.");
+    setStatus("Auto-carve started.");
 }
 
 void Application::stopContinuousCarving()
@@ -281,7 +271,7 @@ void Application::stopContinuousCarving()
     }
 
     continuousCarvingEnabled = false;
-    setStatus("Continuous carving stopped.");
+    setStatus("Auto-carve stopped.");
 }
 
 void Application::updateContinuousCarving()
@@ -325,7 +315,7 @@ bool Application::profileImageUpdateAndEnergyRecalc(sf::Image& carvedImage,
         const auto imageManagerUpdateEndTime = ProfilingClock::now();
         report.imageManagerUpdateMilliseconds =
             elapsedMilliseconds(imageManagerUpdateStartTime, imageManagerUpdateEndTime);
-        setStatus("Failed to update image after carving. " + imageManager.getLastError());
+        setStatus("Update failed: " + imageManager.getLastError());
         return false;
     }
     const auto imageManagerUpdateEndTime = ProfilingClock::now();
@@ -352,12 +342,6 @@ bool Application::profileImageUpdateAndEnergyRecalc(sf::Image& carvedImage,
     report.energyRendererUpdateMilliseconds =
         elapsedMilliseconds(energyRendererUpdateStartTime, energyRendererUpdateEndTime);
 
-    const auto energyDebugOutputStartTime = ProfilingClock::now();
-    printEnergyDebugInfo();
-    const auto energyDebugOutputEndTime = ProfilingClock::now();
-    report.energyDebugOutputMilliseconds =
-        elapsedMilliseconds(energyDebugOutputStartTime, energyDebugOutputEndTime);
-
     const auto pixelGraphConstructionStartTime = ProfilingClock::now();
     pixelGraph.build(energyCalculator);
     const auto pixelGraphConstructionEndTime = ProfilingClock::now();
@@ -366,22 +350,10 @@ bool Application::profileImageUpdateAndEnergyRecalc(sf::Image& carvedImage,
     report.graphNodeCount = pixelGraph.getNodeCount();
     report.graphEdgeCount = pixelGraph.getEdgeCount();
 
-    const auto graphDebugOutputStartTime = ProfilingClock::now();
-    printGraphDebugInfo();
-    const auto graphDebugOutputEndTime = ProfilingClock::now();
-    report.graphDebugOutputMilliseconds =
-        elapsedMilliseconds(graphDebugOutputStartTime, graphDebugOutputEndTime);
-
     const auto dijkstraStartTime = ProfilingClock::now();
     dijkstraSolver.solve(pixelGraph);
     const auto dijkstraEndTime = ProfilingClock::now();
     report.dijkstraMilliseconds = elapsedMilliseconds(dijkstraStartTime, dijkstraEndTime);
-
-    const auto seamDebugOutputStartTime = ProfilingClock::now();
-    printSeamDebugInfo();
-    const auto seamDebugOutputEndTime = ProfilingClock::now();
-    report.seamDebugOutputMilliseconds =
-        elapsedMilliseconds(seamDebugOutputStartTime, seamDebugOutputEndTime);
 
     const auto seamRendererUpdateStartTime = ProfilingClock::now();
     seamRenderer.updateFromSeam(dijkstraSolver.getSeam(), pixelGraph);
@@ -396,13 +368,13 @@ bool Application::removeActiveSeam()
 {
     if (!imageManager.hasImage())
     {
-        setStatus("No image is loaded.");
+        setStatus("No image loaded.");
         return false;
     }
 
     if (!dijkstraSolver.hasSeam())
     {
-        setStatus("No seam available to carve.");
+        setStatus("No seam to carve.");
         return false;
     }
 
@@ -427,46 +399,36 @@ bool Application::removeActiveSeam()
         }
 
         std::ostringstream status;
-        status << "Carved seam: " << imageManager.getWidth() << " x " << imageManager.getHeight();
+        status << "Carved: " << imageManager.getWidth() << "x" << imageManager.getHeight();
         setStatus(status.str());
 
         const auto totalEndTime = ProfilingClock::now();
         profilingReport.totalProcessingMilliseconds = elapsedMilliseconds(totalStartTime, totalEndTime);
-        printSeamProfilingReport(profilingReport);
         return true;
     }
     catch (const std::exception& e)
     {
-        setStatus("Carving error: " + std::string(e.what()));
+        setStatus("Carve error: " + std::string(e.what()));
         return false;
     }
 }
 
 void Application::saveCarvedImage()
 {
-    std::cout << "[1] Entered saveCarvedImage\n";
-    std::cout << "[2] hasImage = " << (imageManager.hasImage() ? "true" : "false") << "\n";
-
     if (!imageManager.hasImage())
     {
-        setStatus("No image is loaded.");
+        setStatus("No image loaded.");
         return;
     }
 
     std::error_code dirError;
     if (!std::filesystem::exists(OutputDirectory, dirError))
     {
-        std::cout << "[3] Output directory exists\n";
         if (!std::filesystem::create_directories(OutputDirectory, dirError))
         {
-            setStatus("Could not create output directory: " + std::string(OutputDirectory));
+            setStatus("Cannot create output dir: " + dirError.message());
             return;
         }
-        std::cout << "[4] Output directory created\n";
-    }
-    else
-    {
-        std::cout << "[3] Output directory exists\n";
     }
 
     int nextIndex = 1;
@@ -481,53 +443,35 @@ void Application::saveCarvedImage()
         ++nextIndex;
     } while (std::filesystem::exists(candidatePath, dirError));
 
-    std::cout << "[5] Candidate path = " << candidatePath << "\n";
-    std::cout << "[6] Calling saveCurrentImage\n";
     if (imageManager.saveCurrentImage(candidatePath))
     {
-        setStatus("Saved carved image: " + candidatePath);
+        setStatus("Saved: " + candidatePath);
     }
     else
     {
-        setStatus("Failed to save image. " + imageManager.getLastError());
+        setStatus("Save failed: " + imageManager.getLastError());
     }
 }
 
 void Application::printSeamProfilingReport(const SeamProfilingReport& report) const
 {
-    std::cout << "\n========== SeamCraft Profiling Report ==========\n";
-    std::cout << "Image resolution: "
-              << report.inputWidth << " x " << report.inputHeight
-              << " -> " << report.outputWidth << " x " << report.outputHeight << '\n';
-    std::cout << "Graph nodes: " << report.graphNodeCount << '\n';
-    std::cout << "Graph edges: " << report.graphEdgeCount << '\n';
-    std::cout << "Timings (milliseconds):\n";
-    std::cout << "  Seam removal: " << report.seamRemovalMilliseconds << '\n';
-    std::cout << "  ImageManager update: " << report.imageManagerUpdateMilliseconds << '\n';
-    std::cout << "  Energy image setup/copy: " << report.energyImageSetupMilliseconds << '\n';
-    std::cout << "  Energy calculation: " << report.energyCalculationMilliseconds << '\n';
-    std::cout << "  EnergyRenderer update: " << report.energyRendererUpdateMilliseconds << '\n';
-    std::cout << "  Energy debug statistics/output: " << report.energyDebugOutputMilliseconds << '\n';
-    std::cout << "  PixelGraph construction: " << report.pixelGraphConstructionMilliseconds << '\n';
-    std::cout << "  PixelGraph debug validation/output: " << report.graphDebugOutputMilliseconds << '\n';
-    std::cout << "  Dijkstra shortest-path computation: " << report.dijkstraMilliseconds << '\n';
-    std::cout << "  Seam debug validation/output: " << report.seamDebugOutputMilliseconds << '\n';
-    std::cout << "  SeamRenderer update: " << report.seamRendererUpdateMilliseconds << '\n';
-    std::cout << "  Total processing time: " << report.totalProcessingMilliseconds << '\n';
-    std::cout << "================================================\n\n";
+    std::cout << "\n--- SeamCraft Profiling ---\n";
+    std::cout << "Image: " << report.inputWidth << "x" << report.inputHeight
+              << " -> " << report.outputWidth << "x" << report.outputHeight << '\n';
+    std::cout << "Nodes: " << report.graphNodeCount << " Edges: " << report.graphEdgeCount << '\n';
+    std::cout << "Seam removal: " << report.seamRemovalMilliseconds << " ms\n";
+    std::cout << "Image update: " << report.imageManagerUpdateMilliseconds << " ms\n";
+    std::cout << "Energy calc: " << report.energyCalculationMilliseconds << " ms\n";
+    std::cout << "Graph build: " << report.pixelGraphConstructionMilliseconds << " ms\n";
+    std::cout << "Dijkstra: " << report.dijkstraMilliseconds << " ms\n";
+    std::cout << "Total: " << report.totalProcessingMilliseconds << " ms\n\n";
 }
 
 void Application::printEnergyDebugInfo() const
 {
     const EnergyCalculator::EnergyMap& energyMap = energyCalculator.getEnergyMap();
-
-    std::cout << "Energy calculation complete.\n";
-    std::cout << "Image size: " << imageManager.getWidth() << " x " << imageManager.getHeight() << '\n';
-    std::cout << "Energy map size: " << energyCalculator.getWidth() << " x " << energyCalculator.getHeight() << '\n';
-
     if (energyMap.empty() || energyMap.front().empty())
     {
-        std::cout << "Energy statistics are unavailable for an empty image.\n";
         return;
     }
 
@@ -548,37 +492,19 @@ void Application::printEnergyDebugInfo() const
     }
 
     const double averageEnergy = totalEnergy / static_cast<double>(energyCount);
-    std::cout << std::fixed << std::setprecision(2)
-              << "Minimum energy: " << minimumEnergy << '\n'
-              << "Maximum energy: " << maximumEnergy << '\n'
-              << "Average energy: " << averageEnergy << '\n'
-              << std::defaultfloat;
+    std::cout << "Energy: min=" << minimumEnergy << " max=" << maximumEnergy
+              << " avg=" << averageEnergy << '\n';
 }
 
 void Application::printGraphDebugInfo() const
 {
-    const unsigned int nodeCount = pixelGraph.getNodeCount();
-    const unsigned int edgeCount = pixelGraph.getEdgeCount();
-    const double averageOutgoingDegree = nodeCount == 0
-                                             ? 0.0
-                                             : static_cast<double>(edgeCount) / static_cast<double>(nodeCount);
-
-    std::cout << "Pixel graph rebuilt.\n";
-    std::cout << "Graph image size: " << pixelGraph.getImageWidth()
-              << " x " << pixelGraph.getImageHeight() << '\n';
-    std::cout << "Node count: " << nodeCount << '\n';
-    std::cout << "Edge count: " << edgeCount << '\n';
-    std::cout << std::fixed << std::setprecision(2)
-              << "Average outgoing degree: " << averageOutgoingDegree << '\n'
-              << std::defaultfloat;
-    std::cout << "Vertical connectivity sanity check: "
-              << (pixelGraph.validateVerticalConnectivity() ? "passed" : "failed") << '\n';
+    std::cout << "Graph: " << pixelGraph.getNodeCount() << " nodes, "
+              << pixelGraph.getEdgeCount() << " edges\n";
 }
 
 void Application::computeShortestSeam()
 {
     dijkstraSolver.solve(pixelGraph);
-    printSeamDebugInfo();
     seamRenderer.updateFromSeam(dijkstraSolver.getSeam(), pixelGraph);
 }
 
@@ -586,59 +512,41 @@ void Application::printSeamDebugInfo() const
 {
     if (!dijkstraSolver.hasSeam())
     {
-        std::cout << "Shortest seam: not computed (empty graph).\n";
         return;
     }
 
-    const std::vector<unsigned int>& seamNodeIds = dijkstraSolver.getSeam();
-    const unsigned int topNodeId = seamNodeIds.front();
-    const unsigned int bottomNodeId = seamNodeIds.back();
-    const auto [topX, topY] = pixelGraph.coordinatesFromNodeId(topNodeId);
-    const auto [bottomX, bottomY] = pixelGraph.coordinatesFromNodeId(bottomNodeId);
-
-    std::cout << "Shortest seam computed.\n";
-    std::cout << "Seam length: " << seamNodeIds.size() << '\n';
-    std::cout << std::fixed << std::setprecision(2)
-              << "Total seam energy: " << dijkstraSolver.getTotalEnergy() << '\n'
-              << std::defaultfloat;
-    std::cout << "Top node: id=" << topNodeId
-              << " (" << topX << ", " << topY << ")\n";
-    std::cout << "Bottom node: id=" << bottomNodeId
-              << " (" << bottomX << ", " << bottomY << ")\n";
-    std::cout << "Seam validation: "
-              << (dijkstraSolver.validateSeam(pixelGraph) ? "passed" : "failed") << '\n';
+    std::cout << "Seam: length=" << dijkstraSolver.getSeam().size()
+              << " energy=" << dijkstraSolver.getTotalEnergy() << '\n';
 }
 
 void Application::setLoadedStatus()
 {
     std::ostringstream status;
-    status << "Loaded: " << imageManager.getFilename()
-           << " | " << imageManager.getWidth()
-           << " x " << imageManager.getHeight();
-
+    status << "Loaded " << imageManager.getFilename()
+           << " (" << imageManager.getWidth() << "x" << imageManager.getHeight() << ")";
     setStatus(status.str());
 }
 
 void Application::setStatus(const std::string& message)
 {
     statusMessage = message;
-    std::cout << statusMessage << '\n';
+    std::cout << message << '\n';
     updateWindowTitle();
 }
 
 void Application::updateWindowTitle()
 {
     std::string title = WindowTitle;
-    title += showingEnergyMap ? " | Energy Map" : " | Original Image";
+    title += showingEnergyMap ? " | Energy" : " | Image";
 
     if (showingSeam)
     {
-        title += " + Seam";
+        title += " +Seam";
     }
 
     if (continuousCarvingEnabled)
     {
-        title += " | Continuous Carving";
+        title += " | Auto";
     }
 
     if (!statusMessage.empty())
