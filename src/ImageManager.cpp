@@ -100,7 +100,7 @@ bool ImageManager::saveCurrentImage(const std::string& filePath)
         return false;
     }
 
-    if (!currentImage.saveToFile(filePath))
+    if (!currentImage.saveToFile(std::filesystem::path(filePath)))
     {
         lastError = "Unable to save image to: " + filePath;
         return false;
