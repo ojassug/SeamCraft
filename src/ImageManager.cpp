@@ -1,5 +1,5 @@
 #include "ImageManager.hpp"
-
+#include <iostream>
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
